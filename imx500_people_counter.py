@@ -74,20 +74,15 @@ def draw_overlay(request, stream="main"):
         h, w = m.array.shape[:2]
 
         for det in detections:
-            x, y, bw, bh = map(int, det.box)
-
-            x1 = max(0, x)
-            y1 = max(0, y)
-            x2 = min(w - 1, x + bw)
-            y2 = min(h - 1, y + bh)
+            x1, y1, x2, y2 = map(int, det.box)
 
             cv2.rectangle(
                 m.array,
                 (x1, y1),
                 (x2, y2),
-                (0, 255, 0),
+                (255, 255, 255),
                 3,
-                cv2.LINE_AA
+                cv2.LINE_8
             )
 
 

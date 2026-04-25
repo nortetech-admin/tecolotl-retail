@@ -14,13 +14,6 @@ MAX_DETECTIONS = 20
 
 last_detections = []
 
-# ── Suavizado EMA ──────────────────────────────────────────────
-# Alpha: 0.0 = máximo suavizado (muy lento), 1.0 = sin suavizado
-# Prueba entre 0.15 y 0.35 según cuánto movimiento real haya
-EMA_ALPHA = 0.25
-smoothed_boxes = {}   # clave: índice de detección → [x1,y1,x2,y2] suavizado
-# ──────────────────────────────────────────────────────────────
-
 
 class Detection:
     def __init__(self, coords, category, conf, metadata):
@@ -37,25 +30,6 @@ def get_labels():
     return labels
 
 
-def smooth_boxes(detections):
-    """Aplica EMA a las coordenadas de cada detección."""
-    global smoothed_boxes
-
-    new_keys = set()
-    for i, det in enumerate(detections):
-        raw = np.array(det.box, dtype=float)
-        if i in smoothed_boxes:
-            smoothed_boxes[i] = EMA_ALPHA * raw + (1 - EMA_ALPHA) * smoothed_boxes[i]
-        else:
-            smoothed_boxes[i] = raw          # primer frame: sin suavizado aún
-        new_keys.add(i)
-
-    # Limpiar entradas de detecciones que ya no existen
-    for k in list(smoothed_boxes.keys()):
-        if k not in new_keys:
-            del smoothed_boxes[k]
-
-
 def parse_detections(metadata):
     global last_detections
 
@@ -64,10 +38,12 @@ def parse_detections(metadata):
         return last_detections
 
     boxes, scores, classes = np_outputs[0][0], np_outputs[1][0], np_outputs[2][0]
+
     _, input_h = imx500.get_input_size()
 
     if intrinsics.bbox_normalization:
         boxes = boxes / input_h
+
     if intrinsics.bbox_order == "xy":
         boxes = boxes[:, [1, 0, 3, 2]]
 
@@ -77,15 +53,17 @@ def parse_detections(metadata):
     for box, score, cls in zip(boxes, scores, classes):
         if score < THRESHOLD:
             continue
+
         cls = int(cls)
         if cls < 0 or cls >= len(labels):
             continue
+
         if labels[cls] != "person":
             continue
+
         parsed.append(Detection(box, cls, score, metadata))
 
     last_detections = parsed[:MAX_DETECTIONS]
-    smooth_boxes(last_detections)          # ← suavizar aquí
     return last_detections
 
 
@@ -93,24 +71,44 @@ def draw_overlay(request, stream="main"):
     detections = parse_detections(request.get_metadata())
 
     with MappedArray(request, stream) as m:
-        for i, det in enumerate(detections):
-            # Usar coordenadas suavizadas en lugar de las crudas
-            if i in smoothed_boxes:
-                x1, y1, x2, y2 = map(int, smoothed_boxes[i])
-            else:
-                x1, y1, x2, y2 = map(int, det.box)
+        h, w = m.array.shape[:2]
 
-            # Borde negro para contraste + rectángulo blanco encima
-            cv2.rectangle(m.array, (x1-2, y1-2), (x2+2, y2+2), (0, 0, 0), 5, cv2.LINE_8)
-            cv2.rectangle(m.array, (x1,   y1  ), (x2,   y2  ), (255, 255, 255), 3, cv2.LINE_8)
+        for det in detections:
+            x1, y1, x2, y2 = map(int, det.box)
+
+            cv2.rectangle(
+                m.array,
+                (x1, y1),
+                (x2, y2),
+                (255, 255, 255),
+                3,
+                cv2.LINE_8
+            )
 
 
 def show_status_window():
     status = np.zeros((140, 520, 3), dtype=np.uint8)
-    cv2.putText(status, "AI MONITORING ACTIVE",
-                (20, 55), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 3)
-    cv2.putText(status, "Smile you are being recorded with AI",
-                (20, 105), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2)
+
+    cv2.putText(
+        status,
+        "AI MONITORING ACTIVE",
+        (20, 55),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1.0,
+        (0, 0, 255),
+        3,
+    )
+
+    cv2.putText(
+        status,
+        "Smile you are being recorded with AI",
+        (20, 105),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.65,
+        (255, 255, 255),
+        2,
+    )
+
     cv2.imshow("AI Status", status)
 
 
@@ -130,7 +128,7 @@ if __name__ == "__main__":
     picam2 = Picamera2(imx500.camera_num)
     config = picam2.create_preview_configuration(
         main={"size": (1280, 720), "format": "XRGB8888"},
-        transform=Transform(rotation=0),
+	transform = Transform(rotation=0),
         controls={"FrameRate": 30},
         buffer_count=12
     )
@@ -145,9 +143,11 @@ if __name__ == "__main__":
         while True:
             picam2.capture_metadata()
             show_status_window()
+
             key = cv2.waitKey(1) & 0xFF
             if key == 27 or key == ord("q"):
                 break
+
     except KeyboardInterrupt:
         pass
     finally:

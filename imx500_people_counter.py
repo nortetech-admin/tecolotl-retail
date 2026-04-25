@@ -9,7 +9,7 @@ from picamera2.devices.imx500 import NetworkIntrinsics
 from libcamera import Transform
 
 MODEL_PATH = "/usr/share/imx500-models/imx500_network_ssd_mobilenetv2_fpnlite_320x320_pp.rpk"
-THRESHOLD = 0.45
+THRESHOLD = 0.35
 MAX_DETECTIONS = 20
 
 last_detections = []
@@ -80,9 +80,9 @@ def draw_overlay(request, stream="main"):
                 m.array,
                 (x1, y1),
                 (x2, y2),
-                (255, 255, 255),
+                (0, 255, 0),
                 3,
-                cv2.LINE_8
+                cv2.LINE_AA
             )
 
 
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     picam2 = Picamera2(imx500.camera_num)
     config = picam2.create_preview_configuration(
         main={"size": (1280, 720), "format": "XRGB8888"},
-	transform = Transform(rotation=0),
+    transform = Transform(rotation=0),
         controls={"FrameRate": 30},
         buffer_count=12
     )

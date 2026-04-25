@@ -25,7 +25,7 @@ def get_labels():
 
 
 def draw_overlay(request):
-    outputs = imx500.get_outputs(request.get_metadata())
+    outputs = imx500.get_outputs(request.get_metadata(), add_batch=True)
     if outputs is None:
         return
 

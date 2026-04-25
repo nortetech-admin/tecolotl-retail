@@ -9,7 +9,7 @@ from picamera2.devices.imx500 import NetworkIntrinsics
 from libcamera import Transform
 
 MODEL_PATH = "/usr/share/imx500-models/imx500_network_ssd_mobilenetv2_fpnlite_320x320_pp.rpk"
-THRESHOLD = 0.55
+THRESHOLD = 0.40
 MAX_DETECTIONS = 20
 
 last_detections = []

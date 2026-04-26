@@ -1,5 +1,15 @@
-venv/
+node_modules/
+.vitepress/cache/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
 __pycache__/
 *.pyc
-.env
+.venv/
+venv/
 
+data/logs/
+data/events/
+data/reports/
+
+.DS_Store

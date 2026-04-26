@@ -6,15 +6,17 @@ The current objective is not to detect gaze precisely. The objective is to extra
 
 ## Current Model
 
-The first implementation will use the Raspberry Pi AI Camera with the Sony IMX500 and the official HigherHRNet COCO pose estimation model.
+The first implementation uses the Raspberry Pi AI Camera with the Sony IMX500 and the official HigherHRNet pose estimation model.
 
 The model outputs 17 human keypoints per detected person.
 
-![IMX500 pose estimation demo](../assets/vision/imx500-pose-demo.png)
-
 ## COCO Keypoints
 
-The model follows the COCO keypoint format:
+The model follows the standard [COCO human pose keypoint format](https://docs.ultralytics.com/datasets/pose/coco/).
+
+<div style="display: flex; gap: 2rem; align-items: flex-start;">
+
+<div>
 
 | Index | Keypoint |
 | :--- | :--- |
@@ -36,18 +38,25 @@ The model follows the COCO keypoint format:
 | 15 | Left ankle |
 | 16 | Right ankle |
 
-![COCO keypoint skeleton](../assets/vision/coco-keypoints-skeleton.png)
+</div>
 
-Each keypoint contains three values:
+<div>
+
+<img src="../assets/images/Keypoints_Geogebra.png" alt="COCO keypoint skeleton" width="300"/>
+
+</div>
+
+</div>
+
+Each detected person is represented as a list of 17 keypoints. Each keypoint is a structure with three fields:
 
 ```txt
-[x, y, confidence]
+x          – horizontal image coordinate
+y          – vertical image coordinate
+confidence – model confidence score for that keypoint (0.0 to 1.0)
 ```
 
-Where:
-* **x** is the horizontal image coordinate.
-* **y** is the vertical image coordinate.
-* **confidence** is the model confidence for that keypoint.
+The exact representation depends on the library used. In Python with the IMX500 SDK, each keypoint is typically accessed as an object with named attributes (`kp.x`, `kp.y`, `kp.conf`) or as a tuple `(x, y, confidence)`. The three values are always in that order.
 
 ## Relevant Keypoints for Retail Attention
 
@@ -64,7 +73,7 @@ The first version should focus mainly on shoulders and hips.
 
 ## Simple Orientation Idea
 
-A person standing in front of a shelf will usually show a different shoulder/hip alignment than a person walking past the shelf. 
+A person standing in front of a shelf will usually show a different shoulder/hip alignment than a person walking past the shelf.
 
 The first heuristic is:
 > Use the line between left shoulder and right shoulder to estimate the apparent orientation of the torso.
@@ -95,11 +104,11 @@ This is not eye tracking. This is only a pose-based approximation.
 
 ## Implementation Path
 
-The first programming step is not shelf attention yet. The first step is to extract and print the keypoints from the IMX500 model. 
+The first programming step is not shelf attention yet. The first step is to extract and print the keypoints from the IMX500 model.
 
 Recommended first steps:
 
-1. Run the official IMX500 HigherHRNet pose demo.
+1. Run the official [IMX500 HigherHRNet pose demo](https://github.com/raspberrypi/picamera2/blob/main/examples/imx500/imx500_pose_estimation_higherhrnet_demo.py).
 2. Confirm that the model detects the 17 keypoints.
 3. Print the keypoints for each detected person.
 4. Filter only the relevant keypoints:
@@ -111,3 +120,8 @@ Recommended first steps:
 5. Draw only those keypoints on screen.
 6. Save sample frames and logs.
 7. Evaluate if shoulders and hips are stable enough for orientation estimation.
+
+## References
+
+- Ultralytics Pose Estimation Documentation  
+  https://docs.ultralytics.com/tasks/pose/

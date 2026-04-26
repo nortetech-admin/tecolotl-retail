@@ -108,7 +108,7 @@ The first programming step is not shelf attention yet. The first step is to extr
 
 Recommended first steps:
 
-1. Run the official [IMX500 HigherHRNet pose demo](https://github.com/raspberrypi/picamera2/blob/main/examples/imx500/imx500_pose_estimation_higherhrnet_demo.py).
+1. Run the official [HigherHRNet Demo](https://github.com/raspberrypi/picamera2/blob/main/examples/imx500/imx500_pose_estimation_higherhrnet_demo.py).
 2. Confirm that the model detects the 17 keypoints.
 3. Print the keypoints for each detected person.
 4. Filter only the relevant keypoints:
@@ -120,6 +120,30 @@ Recommended first steps:
 5. Draw only those keypoints on screen.
 6. Save sample frames and logs.
 7. Evaluate if shoulders and hips are stable enough for orientation estimation.
+
+> [!NOTE]
+> The HigherHRNet demo internally uses the
+> [postprocessing pipeline](https://github.com/raspberrypi/picamera2/blob/main/picamera2/devices/imx500/postprocess_highernet.py)
+> from the official [Picamera2](https://github.com/raspberrypi/picamera2)
+> repository.
+>
+> This implementation is important because it explains how the IMX500 pose
+> pipeline:
+>
+> - Interprets raw output tensors
+> - Decodes heatmaps
+> - Groups keypoints into detected persons
+> - Calculates bounding boxes
+> - Filters detections using confidence thresholds
+>
+> The high-level hardware documentation does not fully explain these internal
+> operations, so reviewing the source code is currently one of the best ways
+> to understand how the IMX500 pose estimation pipeline works internally.
+>
+> Understanding this stage is important because the extracted keypoints will
+> later be used for orientation estimation and shelf-attention analysis.
+
+## References
 
 ## References
 

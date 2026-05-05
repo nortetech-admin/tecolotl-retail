@@ -231,3 +231,6 @@ def print_pose(pose: Pose) -> None:
     for name, kp in pose.retail_keypoints().items():
         status = "✓" if kp.is_valid() else "✗"
         print(f"  [{status}] {name:20s}  x={kp.x:.1f}  y={kp.y:.1f}  conf={kp.confidence:.2f}")
+
+
+

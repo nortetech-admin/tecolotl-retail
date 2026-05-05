@@ -145,7 +145,5 @@ Recommended first steps:
 
 ## References
 
-## References
-
 - Ultralytics Pose Estimation Documentation  
   https://docs.ultralytics.com/tasks/pose/

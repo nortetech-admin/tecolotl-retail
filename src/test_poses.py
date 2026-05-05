@@ -15,7 +15,7 @@ try:
     while True:
         metadata = picam2.capture_metadata()
         poses = get_poses(metadata, imx500)
-	poses = [p for p in poses if p.score > 0.3]
+        poses = [p for p in poses if p.score > 0.3]
         if poses:
             print(f"--- {len(poses)} persona(s) ---")
             for i, pose in enumerate(poses):
@@ -24,7 +24,7 @@ try:
         else:
             print("Sin detecciones...")
 
-	time.sleep(1)
+        time.sleep(1)
 
 except KeyboardInterrupt:
     print("\nDetenido.")

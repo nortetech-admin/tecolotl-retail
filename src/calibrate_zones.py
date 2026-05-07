@@ -110,18 +110,17 @@ def on_mouse(event, x, y, flags, param):
 print("Iniciando cámara...")
 
 imx500 = IMX500("/usr/share/imx500-models/imx500_network_higherhrnet_coco.rpk")
+cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
+cv2.setMouseCallback(WINDOW_NAME, on_mouse)
+
 picam2 = Picamera2(imx500.camera_num)
 config = picam2.create_preview_configuration(
     main={"size": (IMAGE_WIDTH, IMAGE_HEIGHT), "format": "RGB888"}
 )
-cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
-cv2.setMouseCallback(WINDOW_NAME, on_mouse)
-
 picam2.configure(config)
 picam2.start()
 
-print("Cámara lista. Abre la ventana y haz clic en los separadores del anaquel.")
-
+print("Cámara lista...")
 
 
 saved = False

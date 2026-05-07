@@ -208,8 +208,8 @@ try:
     while True:
         # Capturar frame y metadata
         request = picam2.capture_request()
-        frame_rgb = request.make_array("main")
-        metadata  = picam2.get_metadata()
+        frame_rgb = picam2.capture_array("main")
+        metadata  = picam2.capture_metadata()
         request.release()
 
         # picam2 entrega RGB; OpenCV usa BGR

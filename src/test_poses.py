@@ -2,7 +2,7 @@ import time
 import cv2
 import numpy as np
 from picamera2 import Picamera2
-from picamera2.devices.imx500 import IMX500
+from picamera2.devices.imx500 import IMX500, NetworkIntrinsics
 from pose_detector import get_poses, Pose, print_pose
 from shelf_attention import (
     analyze_pose,
@@ -188,13 +188,31 @@ def draw_person(
 # ---------------------------------------------------------------------------
 
 imx500 = IMX500(MODEL_PATH)
+
+intrinsics = imx500.network_intrinsics
+if not intrinsics:
+    intrinsics = NetworkIntrinsics()
+    intrinsics.task = "pose estimation"
+
+if intrinsics.inference_rate is None:
+    intrinsics.inference_rate = 10
+
+intrinsics.update_with_defaults()
+
 picam2 = Picamera2(imx500.camera_num)
 
 config = picam2.create_preview_configuration(
-    main={"size": (IMAGE_WIDTH, 480), "format": "RGB888"}
+    main={"size": (IMAGE_WIDTH, 480), "format": "RGB888"},
+    controls={"FrameRate": intrinsics.inference_rate},
+    buffer_count=12,
 )
+
+imx500.show_network_fw_progress_bar()
+
 picam2.configure(config)
 picam2.start()
+
+imx500.set_auto_aspect_ratio()
 
 IMG_H = 480
 

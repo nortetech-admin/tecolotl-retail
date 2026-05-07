@@ -242,7 +242,7 @@ try:
         
         # Detección de poses
         poses_raw = get_poses(metadata, imx500)
-        poses = [p for p in poses_raw if p.score > 0.4]
+        poses = poses_raw
 
         if time.monotonic() - last_debug_time > 5:
             last_debug_time = time.monotonic()

@@ -179,8 +179,7 @@ cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
 try:
     while True:
         # Capturar frame y metadata en la misma llamada
-        arrays   = picam2.capture_arrays(["main"])
-        frame_rgb = arrays[0]
+        frame_rgb = picam2.capture_array("main")
         metadata  = picam2.capture_metadata()
 
         # picam2 entrega RGB; OpenCV usa BGR

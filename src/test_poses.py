@@ -208,7 +208,7 @@ try:
     while True:
         # Capturar frame y metadata
         request = picam2.capture_request()
-        frame_rgb = picam2.make_array("main")
+        frame_rgb = request.make_array("main")
         metadata  = picam2.get_metadata()
         request.release()
 
@@ -225,7 +225,7 @@ try:
         # Detección de poses
         poses_raw = get_poses(metadata, imx500)
         poses = [p for p in poses_raw if p.score > 0.4]
-        
+
         if time.monotonic() - last_debug_time > 5:
             last_debug_time = time.monotonic()
             print(f"[DEBUG] raw poses: {len(poses_raw)} | filtered poses: {len(poses)}")

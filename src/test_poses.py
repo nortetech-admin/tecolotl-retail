@@ -10,6 +10,7 @@ from shelf_attention import (
     ZONE_COUNT,
     IMAGE_WIDTH,
 )
+from config import SHOW_RULER, SHOW_ZONE_OVERLAY, SHOW_POSE_OVERLAY
 
 MODEL_PATH = "/usr/share/imx500-models/imx500_network_higherhrnet_coco.rpk"
 
@@ -212,8 +213,10 @@ try:
         frame = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
 
         # Overlay de zonas y regla
-        frame = draw_zones(frame, ZONE_COUNT, IMAGE_WIDTH)
-        frame = draw_ruler(frame)
+        if SHOW_ZONE_OVERLAY:
+            frame = draw_zones(frame, ZONE_COUNT, IMAGE_WIDTH)
+        if SHOW_RULER:
+            frame = draw_ruler(frame)
 
         # Detección de poses
         poses = get_poses(metadata, imx500)
@@ -222,7 +225,8 @@ try:
         if poses:
             for i, pose in enumerate(poses):
                 analysis = analyze_pose(pose)
-                draw_person(frame, pose, analysis, i, IMAGE_WIDTH, IMG_H)
+                if SHOW_POSE_OVERLAY:
+                    draw_person(frame, pose, analysis, i, IMAGE_WIDTH, IMG_H)
 
                 # Salida en consola
                 facing = analysis["facing_shelf"]

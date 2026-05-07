@@ -128,59 +128,83 @@ def draw_person(
     img_height: int,
 ) -> None:
     """
-    Dibuja bounding box, hombros, línea central y badge de estado para una persona.
-    Modifica el frame en su lugar.
+    Dibuja solamente los hombros, la línea entre hombros y el badge de estado.
+    No dibuja bounding box porque la lógica de shelf attention depende de la pose,
+    no de la caja.
     """
     h, w = frame.shape[:2]
-    sx   = w / img_width
-    sy   = h / img_height
+    sx = w / img_width
+    sy = h / img_height
 
     facing = analysis["facing_shelf"]
-    zone   = analysis["zone"]
-    cx     = analysis["shoulder_center_x"]
+    zone = analysis["zone"]
 
     if facing is True:
-        color  = COLOR_FACING
+        color = COLOR_FACING
         status = "mirando anaquel"
     elif facing is False:
-        color  = COLOR_AWAY
+        color = COLOR_AWAY
         status = "de frente"
     else:
-        color  = COLOR_UNKNOWN
+        color = COLOR_UNKNOWN
         status = "inconclusivo"
 
     zone_str = f"Z{zone}" if zone is not None else "Z?"
 
-    # Bounding box
-    box = pose.box  # [x1, y1, x2, y2]
-    bx1, by1 = int(box[0] * sx), int(box[1] * sy)
-    bx2, by2 = int(box[2] * sx), int(box[3] * sy)
-    cv2.rectangle(frame, (bx1, by1), (bx2, by2), color, 2, cv2.LINE_AA)
-
-    # Keypoints de hombros y línea que los une
     ls = pose.left_shoulder
     rs = pose.right_shoulder
+
+    # Si los hombros son válidos, usamos los hombros como referencia visual
     if ls.is_valid() and rs.is_valid():
         lsp = (int(ls.x * sx), int(ls.y * sy))
         rsp = (int(rs.x * sx), int(rs.y * sy))
+
+        # Dibujar hombros
         cv2.circle(frame, lsp, 5, color, -1, cv2.LINE_AA)
         cv2.circle(frame, rsp, 5, color, -1, cv2.LINE_AA)
+
+        # Línea entre hombros
         cv2.line(frame, lsp, rsp, color, 2, cv2.LINE_AA)
 
-        # Línea vertical desde el centro de hombros
-        if cx is not None:
-            cx_frame = int(cx * sx)
-            cv2.line(frame, (cx_frame, by1), (cx_frame, by2),
-                     color, 1, cv2.LINE_AA)
+        # Posición del badge: arriba del centro de los hombros
+        badge_x = int(((ls.x + rs.x) / 2.0) * sx)
+        badge_y = int((min(ls.y, rs.y) - 20) * sy)
 
-    # Badge de estado encima del bounding box
+    else:
+        # Si no hay hombros confiables, usamos cualquier keypoint válido como referencia
+        valid_kps = [kp for kp in pose.keypoints if kp.is_valid()]
+
+        if not valid_kps:
+            return
+
+        avg_x = sum(kp.x for kp in valid_kps) / len(valid_kps)
+        min_y = min(kp.y for kp in valid_kps)
+
+        badge_x = int(avg_x * sx)
+        badge_y = int((min_y - 20) * sy)
+
+    # Badge de estado
     badge = f"P{person_idx + 1} {zone_str} | {status}"
     (tw, th), baseline = cv2.getTextSize(badge, FONT, FONT_SCALE, FONT_THICK)
-    pad  = 4
-    bgy1 = max(0, by1 - th - pad * 2 - baseline)
-    cv2.rectangle(frame, (bx1, bgy1), (bx1 + tw + pad * 2, by1), color, -1)
-    cv2.putText(frame, badge, (bx1 + pad, by1 - baseline - pad),
-                FONT, FONT_SCALE, (255, 255, 255), FONT_THICK, cv2.LINE_AA)
+
+    pad = 5
+
+    x1 = max(0, badge_x - tw // 2 - pad)
+    y1 = max(0, badge_y - th - baseline - pad * 2)
+    x2 = min(w - 1, x1 + tw + pad * 2)
+    y2 = min(h - 1, y1 + th + baseline + pad * 2)
+
+    cv2.rectangle(frame, (x1, y1), (x2, y2), color, -1)
+    cv2.putText(
+        frame,
+        badge,
+        (x1 + pad, y2 - baseline - pad),
+        FONT,
+        FONT_SCALE,
+        (255, 255, 255),
+        FONT_THICK,
+        cv2.LINE_AA,
+    )
 
 
 # ---------------------------------------------------------------------------

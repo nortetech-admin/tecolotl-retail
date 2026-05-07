@@ -206,8 +206,10 @@ cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
 try:
     while True:
         # Capturar frame y metadata
+        request = picam2.capture_request()
         frame_rgb = picam2.capture_array("main")
         metadata  = picam2.capture_metadata()
+        request.release()
 
         # picam2 entrega RGB; OpenCV usa BGR
         frame = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
@@ -220,7 +222,7 @@ try:
 
         # Detección de poses
         poses = get_poses(metadata, imx500)
-        poses = [p for p in poses if p.score > 0.3]
+        poses = [p for p in poses if p.score > 0.2]
 
         if poses:
             for i, pose in enumerate(poses):

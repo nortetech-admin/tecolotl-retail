@@ -114,13 +114,15 @@ picam2 = Picamera2(imx500.camera_num)
 config = picam2.create_preview_configuration(
     main={"size": (IMAGE_WIDTH, IMAGE_HEIGHT), "format": "RGB888"}
 )
+cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
+cv2.setMouseCallback(WINDOW_NAME, on_mouse)
+
 picam2.configure(config)
 picam2.start()
 
 print("Cámara lista. Abre la ventana y haz clic en los separadores del anaquel.")
 
-cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
-cv2.setMouseCallback(WINDOW_NAME, on_mouse)
+
 
 saved = False
 try:

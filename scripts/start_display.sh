@@ -1,3 +1,4 @@
+#bash /home/filifloresb/Documents/tecolotl/retail/scripts/start_display.sh
 #!/bin/bash
 rpicam-hello -t 0s \
   --post-process-file /usr/share/rpi-camera-assets/imx500_mobilenet_ssd.json \

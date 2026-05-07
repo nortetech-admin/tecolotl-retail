@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from picamera2 import Picamera2
 from picamera2.devices.imx500 import IMX500
-from pose_detector import get_poses, Pose
+from pose_detector import get_poses, Pose, print_pose
 from shelf_attention import (
     analyze_pose,
     get_zone_boundaries,
@@ -203,12 +203,13 @@ print("Presiona 'q' para salir.\n")
 
 cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
 
+last_debug_time = 0
 try:
     while True:
         # Capturar frame y metadata
         request = picam2.capture_request()
-        frame_rgb = picam2.capture_array("main")
-        metadata  = picam2.capture_metadata()
+        frame_rgb = picam2.make_array("main")
+        metadata  = picam2.get_metadata()
         request.release()
 
         # picam2 entrega RGB; OpenCV usa BGR
@@ -220,9 +221,14 @@ try:
         if SHOW_RULER:
             frame = draw_ruler(frame)
 
+        
         # Detección de poses
-        poses = get_poses(metadata, imx500)
-        poses = [p for p in poses if p.score > 0.2]
+        poses_raw = get_poses(metadata, imx500)
+        poses = [p for p in poses_raw if p.score > 0.4]
+        
+        if time.monotonic() - last_debug_time > 5:
+            last_debug_time = time.monotonic()
+            print(f"[DEBUG] raw poses: {len(poses_raw)} | filtered poses: {len(poses)}")
 
         if poses:
             for i, pose in enumerate(poses):

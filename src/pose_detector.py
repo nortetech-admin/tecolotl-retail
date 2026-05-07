@@ -20,6 +20,7 @@ This module wraps that pipeline and exposes clean Pose objects
 for use by person_tracker.py and the future shelf_attention module.
 """
 
+# Import libraries
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -163,6 +164,7 @@ def get_poses(
     imx500: IMX500,
     window_size: tuple[int, int] = WINDOW_SIZE_H_W,
     detection_threshold: float = DEFAULT_DETECTION_THRESHOLD,
+    debug: bool = False,
 ) -> list[Pose]:
     """
     Parse IMX500 metadata into a list of Pose objects.
@@ -187,6 +189,8 @@ def get_poses(
     np_outputs = imx500.get_outputs(metadata=metadata, add_batch=True)
 
     if np_outputs is None:
+        if debug:
+            print("[pose_detector] No IMX500 outputs")
         return []
 
     keypoints_raw, scores, boxes = postprocess_higherhrnet(

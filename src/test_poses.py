@@ -47,6 +47,32 @@ FONT_THICK = 1
 # Drawing helpers
 # ---------------------------------------------------------------------------
 
+def draw_ruler(frame: np.ndarray) -> np.ndarray:
+    """
+    Dibuja una regla de píxeles en la parte inferior del frame.
+    Marcas cada 10px, números cada 50px.
+    """
+    h, w = frame.shape[:2]
+    ruler_y = h - 30
+
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (0, ruler_y - 4), (w, h), (20, 20, 20), -1)
+    frame = cv2.addWeighted(overlay, 0.65, frame, 0.35, 0)
+
+    for x in range(0, w + 1, 10):
+        is_major = x % 50 == 0
+        color    = (0, 255, 255) if is_major else (0, 160, 160)
+        tick     = 14 if is_major else 7
+        cv2.line(frame, (x, ruler_y), (x, ruler_y + tick), color, 1)
+        if is_major and x > 0:
+            label = str(x)
+            lw, _ = cv2.getTextSize(label, FONT, 0.35, 1)[0]
+            cv2.putText(frame, label, (x - lw // 2, h - 2),
+                        FONT, 0.35, (0, 255, 255), 1, cv2.LINE_AA)
+
+    return frame
+
+
 def draw_zones(frame: np.ndarray, zone_count: int, img_width: int) -> np.ndarray:
     """
     Dibuja rellenos semi-transparentes por zona y líneas divisoras verticales.
@@ -178,15 +204,16 @@ cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
 
 try:
     while True:
-        # Capturar frame y metadata en la misma llamada
+        # Capturar frame y metadata
         frame_rgb = picam2.capture_array("main")
         metadata  = picam2.capture_metadata()
 
         # picam2 entrega RGB; OpenCV usa BGR
         frame = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
 
-        # Overlay de zonas
+        # Overlay de zonas y regla
         frame = draw_zones(frame, ZONE_COUNT, IMAGE_WIDTH)
+        frame = draw_ruler(frame)
 
         # Detección de poses
         poses = get_poses(metadata, imx500)

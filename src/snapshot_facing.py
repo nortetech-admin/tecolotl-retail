@@ -14,11 +14,14 @@ from picamera2 import Picamera2
 from picamera2.devices.imx500 import IMX500, NetworkIntrinsics
 from pose_detector import get_poses
 from shelf_attention import analyze_pose, get_zone_boundaries, IMAGE_WIDTH
+from pathlib import Path
 
 MODEL_PATH = "/usr/share/imx500-models/imx500_network_higherhrnet_coco.rpk"
 IMG_H      = 480
 FONT       = cv2.FONT_HERSHEY_SIMPLEX
 
+SNAPSHOT_DIR = Path("../data/snapshots/facing")
+SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
 imx500 = IMX500(MODEL_PATH)
 
@@ -88,8 +91,8 @@ try:
             cv2.putText(frame, f"MIRANDO ANAQUEL | Zona {zone}",
                         (10, 30), FONT, 0.7, (86, 199, 29), 2, cv2.LINE_AA)
 
-            fname = f"snapshot_{count:03d}_zona{zone}.png"
-            cv2.imwrite(fname, frame)
+            fname = SNAPSHOT_DIR / f"snapshot_{count:03d}_zona{zone}.png"
+            cv2.imwrite(str(fname), frame)
             print(f"[{count}] {fname}")
             count     += 1
             last_saved = now

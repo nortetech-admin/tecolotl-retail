@@ -11,7 +11,7 @@ Presiona Ctrl+C para terminar.
 import time
 import cv2
 from picamera2 import Picamera2
-from picamera2.devices.imx500 import IMX500
+from picamera2.devices.imx500 import IMX500, NetworkIntrinsics
 from pose_detector import get_poses
 from shelf_attention import analyze_pose, get_zone_boundaries, IMAGE_WIDTH
 
@@ -19,12 +19,33 @@ MODEL_PATH = "/usr/share/imx500-models/imx500_network_higherhrnet_coco.rpk"
 IMG_H      = 480
 FONT       = cv2.FONT_HERSHEY_SIMPLEX
 
+
 imx500 = IMX500(MODEL_PATH)
+
+intrinsics = imx500.network_intrinsics
+if not intrinsics:
+    intrinsics = NetworkIntrinsics()
+    intrinsics.task = "pose estimation"
+
+if intrinsics.inference_rate is None:
+    intrinsics.inference_rate = 10
+
+intrinsics.update_with_defaults()
+
 picam2 = Picamera2(imx500.camera_num)
-picam2.configure(picam2.create_preview_configuration(
-    main={"size": (IMAGE_WIDTH, IMG_H), "format": "RGB888"}
-))
+
+config = picam2.create_preview_configuration(
+    main={"size": (IMAGE_WIDTH, 480), "format": "RGB888"},
+    controls={"FrameRate": intrinsics.inference_rate},
+    buffer_count=12,
+)
+
+imx500.show_network_fw_progress_bar()
+
+picam2.configure(config)
 picam2.start()
+
+imx500.set_auto_aspect_ratio()
 
 print("Esperando personas mirando el anaquel... (Ctrl+C para terminar)\n")
 
